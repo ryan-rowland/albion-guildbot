@@ -16,7 +16,7 @@ A Bot that posts interesting events about a guild to Discord.
  - redis
 
 ## Instructions
-The Albion Guildbot can be set u with either environment variables or directly
+The Albion Guildbot can be set up with either environment variables or directly
 modifying `config.js`. The bot was developed against a Heroku environment,
 where environment variables are preferred.
 
@@ -52,6 +52,9 @@ set as a git source (eg `git remote add heroku https://your.heroku.repo`).
 
 After setting your environment variables in the Heroku dashboard or via the
 Heroku CLI, the project can be pushed to heroku via git, eg `git push heroku master`.
+
+If using heroku, make sure to also set the environment variable HEROKU to true. If you
+don't, heroku will shut down after not being bound to a port for 60 seconds.
 
 ### 5b. Running locally
 To run locally, first you'll need to install the dependencies via npm
