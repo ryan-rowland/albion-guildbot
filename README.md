@@ -41,11 +41,12 @@ to be installed locally and run as a service.
 
 ### Step 4 - Configure to your guild
 Set your alliance and guild name(s) in `config.js` or the corresponding
-environment variables.
+environment variables. If set by Environment variable, guilds should be
+set as a comma-separated string. For example, `ALBION_GUILDS="TeamCasualty,Team Casualty 2"`
 
 ### Step 5 - Push to your environment or run locally
 
-### 5a. Environment example: Heroku
+#### 5a. Environment example: Heroku
 Using heroku, you should already have a Heroku project set up (it will need to
 be paid if you plan to run the bot 24/7). You should have your heroku repository
 set as a git source (eg `git remote add heroku https://your.heroku.repo`).
@@ -56,7 +57,7 @@ Heroku CLI, the project can be pushed to heroku via git, eg `git push heroku mas
 If using heroku, make sure to also set the environment variable HEROKU to true. If you
 don't, heroku will shut down after not being bound to a port for 60 seconds.
 
-### 5b. Running locally
+#### 5b. Running locally
 To run locally, first you'll need to install the dependencies via npm
 ```
 npm install
