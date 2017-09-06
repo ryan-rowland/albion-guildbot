@@ -183,12 +183,12 @@ function sendKillReport(event, channelId) {
     const files = [{ name: 'kill.png', attachment: imgBuffer }];
 
     bot.channels.get((channelId || config.feedChannelId)).send({ embed, files }).then(() => {
-	logger.info(`Successfully posted log of ${createDisplayName(event.Killer)} killing ${createDisplayName(event.Victim)}.`);
+      logger.info(`Successfully posted log of ${createDisplayName(event.Killer)} killing ${createDisplayName(event.Victim)}.`);
     }).catch(err => {
       logger.error(err);
     });
   }).catch(err => {
-      logger.error(err);
+    logger.error(err);
   });
 }
 
