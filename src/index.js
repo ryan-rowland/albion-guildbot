@@ -143,9 +143,9 @@ function sendBattleReport(battle, channelId) {
     fields,
   };
 
-  bot.channels.get(channelId || config.feedChannelId).send(`Battle: ${title}`, { embed }).then((_) => {
+  bot.channels.get(channelId || config.feedChannelId).send({ embed }).then(() => {
     logger.info(`Successfully posted log of battle between ${title}.`);
-  }).catch((err) => {
+  }).catch(err => {
     logger.error(err);
   });
 }
@@ -181,14 +181,14 @@ function sendKillReport(event, channelId) {
       });
     }
 
-    const files = [{ name: 'kill.png', attachment: imgBuffer }]
+    const files = [{ name: 'kill.png', attachment: imgBuffer }];
 
-    bot.channels.get((channelId || config.feedChannelId)).send(`${createDisplayName(event.Killer)} killing ${createDisplayName(event.Victim)}`, { embed, files }).then((_) => {
+    bot.channels.get((channelId || config.feedChannelId)).send({ embed, files }).then(() => {
 	logger.info(`Successfully posted log of ${createDisplayName(event.Killer)} killing ${createDisplayName(event.Victim)}.`);
-    }).catch((err) => {
+    }).catch(err => {
       logger.error(err)
     });
-  }).catch((err) => {
+  }).catch(err => {
       logger.error(err)
   });
 }
@@ -196,7 +196,6 @@ function sendKillReport(event, channelId) {
 function checkKillboard() {
   logger.info('Checking killboard...');
   Albion.getEvents({ limit: 51, offset: 0 }).then(events => {
-
     if (!events) { return; }
 
     events.filter(event => event.EventId > lastEventId).forEach(event => {
@@ -228,8 +227,8 @@ function createDisplayName(player) {
 }
 
 bot.on('message', msg => {
-  let message = msg.content
-  let channelID = msg.channel.id
+  let message = msg.content;
+  let channelID = msg.channel.id;
 
   let matches = message.match(/^https:\/\/albiononline\.com\/en\/killboard\/kill\/(\d+)/);
   if (matches && matches.length) {
