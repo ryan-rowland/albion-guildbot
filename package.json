@@ -11,9 +11,17 @@
   ],
   "scripts": {
     "build": "tsc && copyfiles -u 1 src/*.js lib",
+    "build-message": "echo Compiling...",
     "lint": "tslint -c tslint.json --project tslint.json -t stylish",
+    "lint-message": "echo Linting...",
     "start": "npm run build && node lib/index.js"
   },
+  "pre-commit": [
+    "lint-message",
+    "lint",
+    "build-message",
+    "build"
+  ],
   "engines": {
     "node": "8.4.0"
   },
@@ -32,6 +40,7 @@
     "@types/node": "^8.0.26",
     "@types/request": "^2.0.3",
     "copyfiles": "^1.2.0",
+    "pre-commit": "^1.2.2",
     "tslint": "^5.7.0",
     "typescript": "^2.5.2"
   }
