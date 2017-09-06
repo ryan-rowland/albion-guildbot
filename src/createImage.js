@@ -10,9 +10,7 @@ const iconsPromise = Jimp.read('https://assets.albiononline.com/assets/images/ki
   const fame = image.clone();
   fame.crop(0, 0, 100, 100);
   image.crop(110, 0, 100, 100);
-  return {
-    fame, swords: image
-  };
+  return { fame, swords: image };
 });
 
 function getItemUrl(item) {
@@ -25,16 +23,9 @@ function getItemUrl(item) {
 }
 
 function getItemImage(item, size) {
-  const imgUrl = getItemUrl(item);
-  return new Promise((resolve, reject) => {
-    Jimp.read(imgUrl, (err, image) => {
-      if (err) {
-        reject(err);
-      } else {
-        image.resize(size, size);
-        resolve(image);
-      }
-    });
+  return Jimp.read(getItemUrl(item)).then(image => {
+    image.resize(size, size);
+    return image;
   });
 }
 
@@ -62,15 +53,11 @@ function createImage(target, event) {
     : Promise.resolve(new Jimp(ITEM_SIZE, ITEM_SIZE))
   )).then(images => {
     const output = new Jimp(ITEM_SIZE * 6, ITEM_SIZE + FONT_SIZE);
-    /* output.composite(images[0],           0, FONT_SIZE);
-    output.composite(images[1],           0, FONT_SIZE + ITEM_SIZE);
-    output.composite(images[2], ITEM_SIZE*1, FONT_SIZE);
-    output.composite(images[3], ITEM_SIZE*1, FONT_SIZE + ITEM_SIZE);
-    output.composite(images[4], ITEM_SIZE*2, FONT_SIZE);
-    output.composite(images[5], ITEM_SIZE*2, FONT_SIZE + ITEM_SIZE);*/
+
     for (let i = 0; i < 6; i++) {
       output.composite(images[i], ITEM_SIZE * i, FONT_SIZE);
     }
+
     fillRectangle(output, Jimp.rgbaToInt(0, 0, 0, 255), 0, 4, ITEM_SIZE * 6, FONT_SIZE - 4);
 
     return fontPromise.then(font => {
@@ -99,13 +86,11 @@ function createImage(target, event) {
       const swords = icons.swords.clone();
       swords.resize(32, 32);
       output.composite(swords, ITEM_SIZE * 6 - FONT_SIZE - 5, 0);
+
       return new Promise((resolve, reject) => {
         output.getBuffer(Jimp.MIME_PNG, (err, buffer) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(buffer);
-          }
+          if (err) { reject(err); }
+          else { resolve(buffer); }
         });
       });
     });
