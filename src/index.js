@@ -1,9 +1,9 @@
+'use strict';
+
 const bluebird = require('bluebird');
 const Discord = require('discord.js');
-const fs = require('fs');
 const logger = require('winston');
 const Redis = require('redis');
-const request = require('request');
 
 const Albion = require('./AlbionApi');
 const Battle = require('./Battle').default;
@@ -20,8 +20,8 @@ const redis = Redis.createClient(process.env.REDIS_URL);
 
 // Heroku will crash if we're not listenining on env.PORT.
 if (process.env.HEROKU) {
-  const express = require('express');
-  const app = new express();
+  const Express = require('express');
+  const app = new Express();
   app.listen(process.env.PORT || 1337);
 }
 
@@ -32,10 +32,11 @@ logger.level = 'debug';
 
 // Read eventID file to get a list of all posted events
 // If this fails, we cannot continue, so throw an exception.
-let lastBattleId, lastEventId;
+let lastBattleId;
+let lastEventId;
 const databasePromise = Promise.all([
-  redis.getAsync('lastBattleId').then(id => lastBattleId = id),
-  redis.getAsync('lastEventId').then(id => lastEventId = id),
+  redis.getAsync('lastBattleId').then(id => { lastBattleId = id; }),
+  redis.getAsync('lastEventId').then(id => { lastEventId = id; }),
 ]);
 
 // Initialize Discord Bot
@@ -51,7 +52,7 @@ bot.on('ready', () => {
 
     setInterval(checkBattles, 60000);
     setInterval(checkKillboard, 30000);
-  })
+  });
 });
 
 function checkBattles() {
@@ -95,7 +96,7 @@ function sendBattleReport(battle, channelId) {
 
   let fields = battle.rankedFactions.map(({ name, kills, deaths, killFame, factionType }, i) => {
     return {
-      name: `${i+1}. ${name} - ${killFame.toLocaleString()} Fame`,
+      name: `${i + 1}. ${name} - ${killFame.toLocaleString()} Fame`,
       inline: true,
       value: [
         `Kills: ${kills}`,
@@ -111,7 +112,7 @@ function sendBattleReport(battle, channelId) {
   });
 
   if (battle.is5v5) {
-    fields = battle.rankedFactions.map(({ name, kills, deaths }) => {
+    fields = battle.rankedFactions.map(({ name, kills }) => {
       return {
         name: `${name} [Kills: ${kills}]`,
         inline: true,
@@ -128,8 +129,6 @@ function sendBattleReport(battle, channelId) {
 
   const embed = {
     url: `https://albiononline.com/en/killboard/battles/${battle.id}`,
-    description: 'test',
-    title: 'test',
     description: battle.is5v5
       ? `Winner's Fame: ${battle.rankedFactions[0].killFame.toLocaleString()}`
       : `Players: ${battle.players.length}, Kills: ${battle.totalKills}, Fame: ${battle.totalFame.toLocaleString()}`,
@@ -186,10 +185,10 @@ function sendKillReport(event, channelId) {
     bot.channels.get((channelId || config.feedChannelId)).send({ embed, files }).then(() => {
 	logger.info(`Successfully posted log of ${createDisplayName(event.Killer)} killing ${createDisplayName(event.Victim)}.`);
     }).catch(err => {
-      logger.error(err)
+      logger.error(err);
     });
   }).catch(err => {
-      logger.error(err)
+      logger.error(err);
   });
 }
 
@@ -248,23 +247,21 @@ bot.on('message', msg => {
 
   if (message.substring(0, 1) !== '!') { return; }
 
-  let args = message.substring(1).split(' ');
-  const cmd = args[0];
+  const args = message.substring(1).split(' ');
+  const [cmd, id] = args;
 
-  args = args.slice(1);
+  if (!cmd || !id) {
+    return;
+  }
 
   switch (cmd) {
     case 'showBattle':
-      const battleId = args[0];
-      if (!battleId) { return; }
-      Albion.getBattle(battleId).then(battle => {
+      Albion.getBattle(id).then(battle => {
         sendBattleReport(new Battle(battle), channelID);
       });
       break;
     case 'showKill':
-      const eventId = args[0];
-      if (!eventId) { return; }
-      Albion.getEvent(eventId).then(event => {
+      Albion.getEvent(id).then(event => {
         sendKillReport(event, channelID);
       });
       break;
