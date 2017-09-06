@@ -1,14 +1,4 @@
-const googleStorage = require('@google-cloud/storage');
 const Jimp = require('jimp');
-
-const credentials = require('../config').googleStorage;
-
-const storage = googleStorage({
-  projectId: credentials.project_id,
-  credentials,
-});
-
-const bucket = storage.bucket('albion-images');
 
 const FONT_SIZE = 32;
 const ITEM_SIZE = 60;
@@ -108,24 +98,7 @@ function createImage(target, event) {
       return new Promise((resolve, reject) => {
         output.getBuffer(Jimp.MIME_PNG, (err, buffer) => {
           if (err) { return reject(err); }
-
-          const fileUpload = bucket.file(`${event.EventId}.png`);
-          const blobStream = fileUpload.createWriteStream({
-            metadata: { contentType: Jimp.MIME_PNG }
-          });
-
-          blobStream.on('error', (error) => {
-            console.error(error);
-            reject(error);
-          });
-
-          blobStream.on('finish', () => {
-            // The public URL can be used to directly access the file via HTTP.
-            const url = `https://storage.googleapis.com/${bucket.name}/${fileUpload.name}?a=${Math.random().toString(36)}`;
-            resolve(url);
-          });
-
-          blobStream.end(buffer);
+          resolve(buffer);
         });
       });
     });

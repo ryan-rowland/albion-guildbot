@@ -1,5 +1,5 @@
 const bluebird = require('bluebird');
-const Discord = require('discord.io');
+const Discord = require('discord.js');
 const fs = require('fs');
 const logger = require('winston');
 const Redis = require('redis');
@@ -39,14 +39,11 @@ const databasePromise = Promise.all([
 ]);
 
 // Initialize Discord Bot
-const bot = new Discord.Client({
-  token: config.token,
-  autorun: true
-});
+const bot = new Discord.Client();
 
 bot.on('ready', () => {
   logger.info('Connected');
-  logger.info(`Logged in as: ${bot.username} - (${bot.id})`);
+  logger.info(`Logged in as: ${bot.user.username} - (${bot.user.id})`);
 
   databasePromise.then(() => {
     checkBattles();
@@ -146,16 +143,17 @@ function sendBattleReport(battle, channelId) {
     fields,
   };
 
-  bot.sendMessage({ to: channelId || config.feedChannelId, embed }, (err) => {
-    if (err) { return logger.error(err); }
+  bot.channels.get(channelId || config.feedChannelId).send({ embed }).then(() => {
     logger.info(`Successfully posted log of battle between ${title}.`);
+  }).catch(err => {
+    logger.error(err);
   });
 }
 
 function sendKillReport(event, channelId) {
   const isFriendlyKill = config.guilds.indexOf(event.Killer.GuildName) !== -1;
 
-  createImage('Victim', event).then(imgUrl => {
+  createImage('Victim', event).then(imgBuffer => {
     const participants = parseInt(event.numberOfParticipants || event.GroupMembers.length, 10);
     const assists = participants - 1;
 
@@ -164,7 +162,7 @@ function sendKillReport(event, channelId) {
       title: `${event.Killer.Name} (${assists ? '+' + assists : 'Solo!'}) just killed ${event.Victim.Name}!`,
       description: `From guild: ${createGuildTag(event[isFriendlyKill ? 'Victim' : 'Killer'])}`,
       color: isFriendlyKill ? 65280 : 16711680,
-      image: { url: imgUrl },
+      image: { url: 'attachment://kill.png' },
     };
 
     if (event.TotalVictimKillFame > 25000) {
@@ -183,10 +181,15 @@ function sendKillReport(event, channelId) {
       });
     }
 
-    bot.sendMessage({ to: channelId || config.feedChannelId, embed }, (err) => {
-      if (err) { return logger.error(err); }
-      logger.info(`Successfully posted log of ${createDisplayName(event.Killer)} killing ${createDisplayName(event.Victim)}.`);
+    const files = [{ name: 'kill.png', attachment: imgBuffer }];
+
+    bot.channels.get((channelId || config.feedChannelId)).send({ embed, files }).then(() => {
+	logger.info(`Successfully posted log of ${createDisplayName(event.Killer)} killing ${createDisplayName(event.Victim)}.`);
+    }).catch(err => {
+      logger.error(err)
     });
+  }).catch(err => {
+      logger.error(err)
   });
 }
 
@@ -223,7 +226,10 @@ function createDisplayName(player) {
   return `**<${allianceTag}${player.GuildName || 'Unguilded'}>** ${player.Name}`;
 }
 
-bot.on('message', (user, userID, channelID, message) => {
+bot.on('message', msg => {
+  let message = msg.content;
+  let channelID = msg.channel.id;
+
   let matches = message.match(/^https:\/\/albiononline\.com\/en\/killboard\/kill\/(\d+)/);
   if (matches && matches.length) {
     Albion.getEvent(matches[1]).then(event => {
@@ -264,3 +270,5 @@ bot.on('message', (user, userID, channelID, message) => {
       break;
   }
 });
+
+bot.login(config.token);
