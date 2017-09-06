@@ -61,3 +61,9 @@ And call the `start` script to run the bot
 ```
 npm start
 ```
+
+## Contributing
+To contribute, fork this repository and make your changes as a branch of the fork. After the changes are functional and ready to merge back in, submit a Pull Request.
+
+### Discord
+If I haven't responded to your PR in a while, if you have any questions, want to chat or just want to see the bot in action, you can join my testing server at https://discord.gg/PeypCBv.
