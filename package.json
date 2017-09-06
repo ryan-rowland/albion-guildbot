@@ -4,6 +4,9 @@
   "description": "A discord bot that posts interesting events for a guild.",
   "main": "src/index.js",
   "author": "Ryan Rowland<ryan.w.rowland@gmail.com>",
+  "contributors": [
+    "Hunter Madison"
+  ],
   "keywords": [
     "albion",
     "discord",
