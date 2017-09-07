@@ -94,8 +94,9 @@ export default class Battle {
     }
 
     this.is5v5 = this.players.length === 10
-      && this.alliances.size === 2
-      && this.alliances.values().next().value.players.length === 5;
+      && this.rankedFactions.length === 2
+      && this.rankedFactions[0].players.length === 5
+      && this.rankedFactions[1].players.length === 5;
 
     this.rankedFactions.sort((a, b) => this.is5v5
       ? b.kills - a.kills

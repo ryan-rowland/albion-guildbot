@@ -106,11 +106,11 @@ function sendBattleReport(battle, channelId) {
   });
 
   if (battle.is5v5) {
-    fields = battle.rankedFactions.map(({ name, kills }) => {
+    fields = battle.rankedFactions.map(({ name, kills, players }) => {
       return {
         name: `${name} [Kills: ${kills}]`,
         inline: true,
-        value: battle.alliances.get(name).players
+        value: players
           .sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1)
           .sort((a, b) => b.kills > a.kills)
           .map(({ name, kills, deaths }) => `${deaths ? '~~' : ''}${name}${deaths ? '~~' : ''}: ${kills} Kills`)
