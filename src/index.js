@@ -1,9 +1,9 @@
 'use strict';
 
-const bluebird = require('bluebird');
 const Discord = require('discord.js');
+const FileSync = require('lowdb/adapters/FileSync');
 const logger = require('winston');
-const Redis = require('redis');
+const low = require('lowdb');
 
 const Albion = require('./AlbionApi');
 const Battle = require('./Battle').default;
@@ -14,9 +14,9 @@ const config = require('../config').bot;
 const BATTLE_MIN_PLAYERS = 10;
 const BATTLE_MIN_RELEVANT_PLAYERS = 3;
 
-bluebird.promisifyAll(Redis.RedisClient.prototype);
-bluebird.promisifyAll(Redis.Multi.prototype);
-const redis = Redis.createClient(process.env.REDIS_URL);
+const adapter = new FileSync('.db.json');
+const db = low(adapter);
+db.defaults({ recents: { battleId: 0, eventId: 0 } }).write();
 
 // Heroku will crash if we're not listenining on env.PORT.
 if (process.env.HEROKU) {
@@ -32,12 +32,8 @@ logger.level = 'debug';
 
 // Read eventID file to get a list of all posted events
 // If this fails, we cannot continue, so throw an exception.
-let lastBattleId;
-let lastEventId;
-const databasePromise = Promise.all([
-  redis.getAsync('lastBattleId').then(id => { lastBattleId = id; }),
-  redis.getAsync('lastEventId').then(id => { lastEventId = id; }),
-]);
+let lastBattleId = db.get('recents.battleId').value();
+let lastEventId = db.get('recents.eventId').value();
 
 // Initialize Discord Bot
 const bot = new Discord.Client();
@@ -46,13 +42,11 @@ bot.on('ready', () => {
   logger.info('Connected');
   logger.info(`Logged in as: ${bot.user.username} - (${bot.user.id})`);
 
-  databasePromise.then(() => {
-    checkBattles();
-    checkKillboard();
+  checkBattles();
+  checkKillboard();
 
-    setInterval(checkBattles, 60000);
-    setInterval(checkKillboard, 30000);
-  });
+  setInterval(checkBattles, 60000);
+  setInterval(checkKillboard, 30000);
 });
 
 function checkBattles() {
@@ -81,12 +75,12 @@ function checkBattles() {
 function sendBattleReport(battle, channelId) {
   if (battle.id > lastBattleId) {
     lastBattleId = battle.id;
-    redis.setAsync('lastBattleId', lastBattleId);
+    db.set('recents.battleId', lastBattleId).write();
   }
 
   const title = battle.rankedFactions.slice()
-    .sort((a, b) => battle.alliances.get(b.name).players.length - battle.alliances.get(a.name).players.length)
-    .map(({ name }) => `${name}(${battle.alliances.get(name).players.length})`)
+    .sort((a, b) => b.players.length - a.players.length)
+    .map(({ name, players }) => `${name}(${players.length})`)
     .join(' vs ');
 
   const thumbnailUrl = battle.players.length >= 100 ? 'https://storage.googleapis.com/albion-images/static/PvP-100.png'
@@ -203,7 +197,7 @@ function checkKillboard() {
 
       if (event.EventId > lastEventId) {
         lastEventId = event.EventId;
-        redis.setAsync('lastEventId', lastEventId);
+        db.set('recents.eventId', lastEventId).write();
       }
 
       sendKillReport(event);

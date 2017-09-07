@@ -4,3 +4,4 @@ node_modules
 serviceAccountKey.json
 lib
 npm-debug.log
+.db.json
