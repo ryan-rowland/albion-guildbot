@@ -9,10 +9,7 @@ const Albion = require('./AlbionApi');
 const Battle = require('./Battle').default;
 const { createImage, getItemUrl } = require('./createImage');
 
-const config = require('../config').bot;
-
-const BATTLE_MIN_PLAYERS = 10;
-const BATTLE_MIN_RELEVANT_PLAYERS = 3;
+const config = require('../config').config;
 
 const adapter = new FileSync('.db.json');
 const db = low(adapter);
@@ -58,16 +55,16 @@ function checkBattles() {
       // Format the raw battle data into a more useful Battle object
       .map(battleData => new Battle(battleData))
       // Filter out battles with insigificant amounts of players
-      .filter(battle => battle.players.length >= BATTLE_MIN_PLAYERS)
+      .filter(battle => battle.players.length >= config.battle.min_players)
       // Filter out battles that don't involve a relevent number of guildmates
       .filter(battle => {
-        const relevantPlayerCount = config.guilds.reduce((total, guildName) => {
+        const relevantPlayerCount = config.guild.guilds.reduce((total, guildName) => {
           return total + (battle.guilds.has(guildName)
             ? battle.guilds.get(guildName).players.length
             : 0);
         }, 0);
 
-        return relevantPlayerCount >= BATTLE_MIN_RELEVANT_PLAYERS;
+        return relevantPlayerCount >= config.battle.min_relevant_players;
       }).forEach(battle => sendBattleReport(battle));
   });
 }
@@ -119,7 +116,7 @@ function sendBattleReport(battle, channelId) {
     });
   }
 
-  const didWin = battle.rankedFactions[0].name === config.alliance;
+  const didWin = battle.rankedFactions[0].name === config.guild.alliance;
 
   const embed = {
     url: `https://albiononline.com/en/killboard/battles/${battle.id}`,
@@ -136,7 +133,7 @@ function sendBattleReport(battle, channelId) {
     fields,
   };
 
-  bot.channels.get(channelId || config.feedChannelId).send({ embed }).then(() => {
+  bot.channels.get(channelId || config.discord.feedChannelId).send({ embed }).then(() => {
     logger.info(`Successfully posted log of battle between ${title}.`);
   }).catch(err => {
     logger.error(err);
@@ -144,7 +141,7 @@ function sendBattleReport(battle, channelId) {
 }
 
 function sendKillReport(event, channelId) {
-  const isFriendlyKill = config.guilds.indexOf(event.Killer.GuildName) !== -1;
+  const isFriendlyKill = config.guild.guilds.indexOf(event.Killer.GuildName) !== -1;
 
   createImage('Victim', event).then(imgBuffer => {
     const participants = parseInt(event.numberOfParticipants || event.GroupMembers.length, 10);
@@ -158,7 +155,7 @@ function sendKillReport(event, channelId) {
       image: { url: 'attachment://kill.png' },
     };
 
-    if (event.TotalVictimKillFame > 25000) {
+    if (event.TotalVictimKillFame > config.kill.min_fame) {
       Object.assign(embed, {
         thumbnail: { url: getItemUrl(event.Killer.Equipment.MainHand) },
         title: `${event.Killer.Name} just killed ${event.Victim.Name}!`,
@@ -176,7 +173,7 @@ function sendKillReport(event, channelId) {
 
     const files = [{ name: 'kill.png', attachment: imgBuffer }];
 
-    return bot.channels.get((channelId || config.feedChannelId)).send({ embed, files });
+    return bot.channels.get((channelId || config.discord.feedChannelId)).send({ embed, files });
   }).then(() => {
     logger.info(`Successfully posted log of ${createDisplayName(event.Killer)} killing ${createDisplayName(event.Victim)}.`);
   });
@@ -188,8 +185,8 @@ function checkKillboard() {
     if (!events) { return; }
 
     events.filter(event => event.EventId > lastEventId).forEach(event => {
-      const isFriendlyKill = config.guilds.indexOf(event.Killer.GuildName) !== -1;
-      const isFriendlyDeath = config.guilds.indexOf(event.Victim.GuildName) !== -1;
+      const isFriendlyKill = config.guild.guilds.indexOf(event.Killer.GuildName) !== -1;
+      const isFriendlyDeath = config.guild.guilds.indexOf(event.Victim.GuildName) !== -1;
 
       if (!(isFriendlyKill || isFriendlyDeath) || event.TotalVictimKillFame < 10000) {
         return;
@@ -258,4 +255,4 @@ bot.on('message', msg => {
   }
 });
 
-bot.login(config.token);
+bot.login(config.discord.token);

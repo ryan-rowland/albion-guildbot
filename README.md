@@ -28,7 +28,7 @@ these settings either to your `config.js` directly, or set the appropriate
 env vars in your environment according to `config.js`.
 
 ### Step 2 - Configure to your guild
-Set your alliance and guild name(s) in `config.js` or the corresponding
+Copy or rename `config.js.dist` to `config.js`. Set your alliance and guild name(s) in `config.js` or the corresponding
 environment variables. If set by Environment variable, guilds should be
 set as a comma-separated string. For example, `ALBION_GUILDS="TeamCasualty,Team Casualty 2"`
 
