@@ -1,5 +1,7 @@
 'use strict';
 
+require('babel-polyfill');
+
 const Discord = require('discord.js');
 const FileSync = require('lowdb/adapters/FileSync');
 const logger = require('winston');
