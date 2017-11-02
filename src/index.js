@@ -9,7 +9,7 @@ const Albion = require('./AlbionApi');
 const Battle = require('./Battle').default;
 const { createImage, getItemUrl } = require('./createImage');
 
-const config = require('../config').config;
+const config = require('../config');
 
 const adapter = new FileSync('.db.json');
 const db = low(adapter);
@@ -55,7 +55,7 @@ function checkBattles() {
       // Format the raw battle data into a more useful Battle object
       .map(battleData => new Battle(battleData))
       // Filter out battles with insigificant amounts of players
-      .filter(battle => battle.players.length >= config.battle.min_players)
+      .filter(battle => battle.players.length >= config.battle.minPlayers)
       // Filter out battles that don't involve a relevent number of guildmates
       .filter(battle => {
         const relevantPlayerCount = config.guild.guilds.reduce((total, guildName) => {
@@ -64,7 +64,7 @@ function checkBattles() {
             : 0);
         }, 0);
 
-        return relevantPlayerCount >= config.battle.min_relevant_players;
+        return relevantPlayerCount >= config.battle.minRelevantPlayers;
       }).forEach(battle => sendBattleReport(battle));
   });
 }
@@ -155,7 +155,7 @@ function sendKillReport(event, channelId) {
       image: { url: 'attachment://kill.png' },
     };
 
-    if (event.TotalVictimKillFame > config.kill.min_fame) {
+    if (event.TotalVictimKillFame > config.kill.minFame) {
       Object.assign(embed, {
         thumbnail: { url: getItemUrl(event.Killer.Equipment.MainHand) },
         title: `${event.Killer.Name} just killed ${event.Victim.Name}!`,
