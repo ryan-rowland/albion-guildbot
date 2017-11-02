@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "author": "Ryan Rowland<ryan.w.rowland@gmail.com>",
   "contributors": [
-    "Hunter Madison"
+    "Hunter Madison",
+    "Michael Förster<mfo1009@googlemail.com>"
   ],
   "keywords": [
     "albion",
