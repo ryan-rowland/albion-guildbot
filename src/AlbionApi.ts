@@ -21,7 +21,11 @@ function baseRequest(path: string, queries?: { [key: string]: any }): Promise<an
         reject(error || response);
         return;
       }
-      resolve(JSON.parse(body));
+      try {
+        resolve(JSON.parse(body));
+      } catch (error) {
+        reject(error);
+      }
     });
   });
 }
