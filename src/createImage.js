@@ -1,6 +1,7 @@
 'use strict';
 
 const Jimp = require('jimp');
+const config = require('../config');
 
 const FONT_SIZE = 32;
 const ITEM_SIZE = 60;
@@ -72,7 +73,7 @@ function createImage(target, event) {
       const killFame = event.TotalVictimKillFame.toLocaleString();
       output.print(font, FONT_SIZE + 12, (FONT_SIZE - 18) / 2, killFame);
 
-      if (event.TotalVictimKillFame < 25000) {
+      if (event.TotalVictimKillFame < config.kill.minFame) {
         output.crop(0, 0, ITEM_SIZE * 6, FONT_SIZE);
       }
 
