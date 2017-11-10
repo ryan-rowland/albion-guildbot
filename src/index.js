@@ -186,7 +186,14 @@ function checkKillboard() {
   Albion.getEvents({ limit: 51, offset: 0 }).then(events => {
     if (!events) { return; }
 
+    // resort events to ascending EventId order
+    events.sort(function(a, b) {
+      return a.EventId - b.EventId;
+    });
+
     events.filter(event => event.EventId > lastEventId).forEach(event => {
+      lastEventId = event.EventId;
+
       const isFriendlyKill = config.guild.guilds.indexOf(event.Killer.GuildName) !== -1;
       const isFriendlyDeath = config.guild.guilds.indexOf(event.Victim.GuildName) !== -1;
 
@@ -194,13 +201,9 @@ function checkKillboard() {
         return;
       }
 
-      if (event.EventId > lastEventId) {
-        lastEventId = event.EventId;
-        db.set('recents.eventId', lastEventId).write();
-      }
-
       sendKillReport(event);
     });
+    db.set('recents.eventId', lastEventId).write();
   });
 }
 
