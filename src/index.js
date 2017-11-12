@@ -33,6 +33,8 @@ logger.level = 'debug';
 // If this fails, we cannot continue, so throw an exception.
 let lastBattleId = db.get('recents.battleId').value();
 let lastEventId = db.get('recents.eventId').value();
+let lastAlbionStatus = db.get('recents.albionStatus').value();
+let lastAlbionStatusMsg = db.get('recents.albionStatusMsg').value();
 
 // Initialize Discord Bot
 const bot = new Discord.Client();
@@ -41,11 +43,13 @@ bot.on('ready', () => {
   logger.info('Connected');
   logger.info(`Logged in as: ${bot.user.username} - (${bot.user.id})`);
 
+  checkServerStatus();
   checkBattles();
   checkKillboard();
 
   setInterval(checkBattles, 60000);
   setInterval(checkKillboard, 30000);
+  setInterval(checkServerStatus, 60000);
 });
 
 function checkBattles() {
@@ -213,6 +217,42 @@ function createGuildTag(player) {
 function createDisplayName(player) {
   const allianceTag = player.AllianceName ? `[${player.AllianceName}]` : '';
   return `**<${allianceTag}${player.GuildName || 'Unguilded'}>** ${player.Name}`;
+}
+
+function checkServerStatus(channelId) {
+  logger.info('Checking server status...');
+
+  Albion.serverStatusRequest().then(currentAlbionStatus => {
+    if (lastAlbionStatus !== currentAlbionStatus.status || lastAlbionStatusMsg !== currentAlbionStatus.message) {
+      let now = new Date();
+
+      lastAlbionStatus = currentAlbionStatus.status;
+      lastAlbionStatusMsg = currentAlbionStatus.message;
+
+      const embed = {
+        url: 'https://albiononline.statuspage.io',
+        title: 'Albion Status Information',
+        description: `Server Status just changed to **${currentAlbionStatus.status}**`,
+        color: 0xfefb00,
+        fields: [{
+          name: 'Message',
+          value: currentAlbionStatus.message,
+          inline: true,
+        }],
+        timestamp: now.toISOString(),
+      };
+
+      bot.channels.get(channelId || config.discord.statusChannelId).send({ embed }).then(() => {
+        logger.info(`Successfully posted albion status: ${currentAlbionStatus.status}`);
+      }).catch(err => {
+        logger.error(err);
+      });
+
+      db.set('recents.albionStatus', currentAlbionStatus.status).write();
+      db.set('recents.albionStatusMsg', currentAlbionStatus.message).write();
+    }
+  });
+
 }
 
 bot.on('message', msg => {
