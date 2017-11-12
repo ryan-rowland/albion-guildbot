@@ -232,7 +232,7 @@ function checkServerStatus(channelId) {
       const embed = {
         url: 'https://albiononline.statuspage.io',
         title: 'Albion Status Information',
-        description: `Server Status just changed to **${currentAlbionStatus.status}**`,
+        description: `Server status just changed to **${currentAlbionStatus.status}**`,
         color: 0xfefb00,
         fields: [{
           name: 'Message',
