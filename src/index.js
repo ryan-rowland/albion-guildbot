@@ -233,7 +233,7 @@ function checkServerStatus(channelId) {
         url: 'https://albiononline.statuspage.io',
         title: 'Albion Status Information',
         description: `Server status just changed to **${currentAlbionStatus.status}**`,
-        color: 0xfefb00,
+        color: currentAlbionStatus.status === 'offline' ? 0xff2600 : 0x00f900,
         fields: [{
           name: 'Message',
           value: currentAlbionStatus.message,
@@ -252,7 +252,6 @@ function checkServerStatus(channelId) {
       db.set('recents.albionStatusMsg', currentAlbionStatus.message).write();
     }
   });
-
 }
 
 bot.on('message', msg => {
