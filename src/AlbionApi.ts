@@ -24,7 +24,7 @@ function baseRequest(baseUrl: string, path: string, queries?: { [key: string]: a
         return;
       }
       try {
-        resolve(JSON.parse(body.trim()));  // trim need for Albion status
+        resolve(JSON.parse(body.replace(/\n/g, ' ').replace(/\r/g, '').trim())); // replacements needed for status.txt
       } catch (error) {
         reject(error);
       }
