@@ -43,13 +43,16 @@ bot.on('ready', () => {
   logger.info('Connected');
   logger.info(`Logged in as: ${bot.user.username} - (${bot.user.id})`);
 
-  checkServerStatus();
+  if (config.discord.statusChannelId) {
+    checkServerStatus();
+    setInterval(checkServerStatus, 60000);
+  }
+
   checkBattles();
   checkKillboard();
 
   setInterval(checkBattles, 60000);
   setInterval(checkKillboard, 30000);
-  setInterval(checkServerStatus, 60000);
 });
 
 function checkBattles() {
@@ -219,34 +222,40 @@ function createDisplayName(player) {
   return `**<${allianceTag}${player.GuildName || 'Unguilded'}>** ${player.Name}`;
 }
 
+function sendServerStatus(channelId, isCmd) {
+  let now = new Date();
+
+  const embed = {
+    url: 'https://albiononline.statuspage.io',
+    title: 'Albion Status Information',
+    description: isCmd
+      ? `Current server status is **${lastAlbionStatus}**`
+      : `Server status just changed to **${lastAlbionStatus}**`,
+    color: lastAlbionStatus === 'offline' ? 0xff2600 : 0x00f900,
+    fields: [{
+      name: 'Message',
+      value: lastAlbionStatusMsg,
+      inline: true,
+    }],
+    timestamp: now.toISOString(),
+  };
+
+  bot.channels.get(channelId || config.discord.statusChannelId).send({ embed }).then(() => {
+    logger.info(`Successfully posted albion status: ${lastAlbionStatus}`);
+  }).catch(err => {
+    logger.error(err);
+  });
+}
+
 function checkServerStatus(channelId) {
   logger.info('Checking server status...');
 
   Albion.serverStatusRequest().then(currentAlbionStatus => {
     if (lastAlbionStatus !== currentAlbionStatus.status || lastAlbionStatusMsg !== currentAlbionStatus.message) {
-      let now = new Date();
-
       lastAlbionStatus = currentAlbionStatus.status;
       lastAlbionStatusMsg = currentAlbionStatus.message;
 
-      const embed = {
-        url: 'https://albiononline.statuspage.io',
-        title: 'Albion Status Information',
-        description: `Server status just changed to **${currentAlbionStatus.status}**`,
-        color: currentAlbionStatus.status === 'offline' ? 0xff2600 : 0x00f900,
-        fields: [{
-          name: 'Message',
-          value: currentAlbionStatus.message,
-          inline: true,
-        }],
-        timestamp: now.toISOString(),
-      };
-
-      bot.channels.get(channelId || config.discord.statusChannelId).send({ embed }).then(() => {
-        logger.info(`Successfully posted albion status: ${currentAlbionStatus.status}`);
-      }).catch(err => {
-        logger.error(err);
-      });
+      sendServerStatus(channelId);
 
       db.set('recents.albionStatus', currentAlbionStatus.status).write();
       db.set('recents.albionStatusMsg', currentAlbionStatus.message).write();
@@ -279,10 +288,26 @@ bot.on('message', msg => {
   const args = message.substring(1).split(' ');
   const [cmd, id] = args;
 
-  if (!cmd || !id) {
+  if (!cmd) {
     return;
   }
 
+  // cmd without parameter
+  switch (cmd) {
+    case 'showStatus':
+      if (config.discord.statusChannelId) {
+        sendServerStatus(channelID, 1);
+      } else {
+        logger.error('To use !showStatus define \'sendServerStatus\' in config file');
+      }
+      break;
+  }
+
+  if (!id) {
+    return;
+  }
+
+  // cmd with parameter
   switch (cmd) {
     case 'showBattle':
       Albion.getBattle(id).then(battle => {
