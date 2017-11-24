@@ -295,11 +295,7 @@ bot.on('message', msg => {
   // cmd without parameter
   switch (cmd) {
     case 'showStatus':
-      if (config.discord.statusChannelId) {
-        sendServerStatus(channelID, 1);
-      } else {
-        logger.error('To use !showStatus define \'sendServerStatus\' in config file');
-      }
+      sendServerStatus(channelID, 1);
       break;
   }
 
