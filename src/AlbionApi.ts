@@ -2,18 +2,20 @@ import * as request from 'request';
 
 import IBattleData from './Battle/IBattleData';
 
-const BASE_URL = process.env.ALBION_API_BASE || 'https://gameinfo.albiononline.com/api/gameinfo';
+// TODO: Both should be config options later?
+const API_URL = process.env.ALBION_API_BASE || 'https://gameinfo.albiononline.com/api/gameinfo';
+const LIVE_URL = 'http://live.albiononline.com';
 
 /**
  * Request a resource from the Albion Online API.
  * @param path - The resource path of the URL.
  * @param queries - Query params to send along with the request.
  */
-function baseRequest(path: string, queries?: { [key: string]: any }): Promise<any> {
+function baseRequest(baseUrl: string, path: string, queries?: { [key: string]: any }): Promise<any> {
   const qs = queries
     ? '?' + Object.entries(queries).map((query: string[]) => query.join('=')).join('&')
     : '';
-  const url = `${BASE_URL}${path}?${qs}`;
+  const url = `${baseUrl}${path}?${qs}`;
 
   return new Promise((resolve, reject) => {
     request(url, (error, response, body) => {
@@ -22,7 +24,7 @@ function baseRequest(path: string, queries?: { [key: string]: any }): Promise<an
         return;
       }
       try {
-        resolve(JSON.parse(body));
+        resolve(JSON.parse(body.replace(/\n/g, ' ').replace(/\r/g, '').trim())); // replacements needed for status.txt
       } catch (error) {
         reject(error);
       }
@@ -55,7 +57,7 @@ export interface IRequestOptions {
  * Get a single Battle by battleId
  */
 export function getBattle(battleId: string): Promise<IBattleData> {
-  return baseRequest(`/battles/${battleId}`);
+  return baseRequest(API_URL, `/battles/${battleId}`);
 }
 
 /**
@@ -69,14 +71,14 @@ export function getBattles(options: IRequestOptions): Promise<IBattleData[]> {
     sort: options.sort || 'recent',
   };
 
-  return baseRequest(`/battles`, queries);
+  return baseRequest(API_URL, `/battles`, queries);
 }
 
 /**
  * Get a single Battle by eventId
  */
 export function getEvent(eventId: string): Promise<any> {
-  return baseRequest(`/events/${eventId}`);
+  return baseRequest(API_URL, `/events/${eventId}`);
 }
 
 /**
@@ -90,5 +92,12 @@ export function getEvents(options: IRequestOptions): Promise<any[]> {
     sort: options.sort || 'recent',
   };
 
-  return baseRequest(`/events`, queries);
+  return baseRequest(API_URL, `/events`, queries);
+}
+
+/**
+ * Get Albion Online status information
+ */
+export function serverStatusRequest(): Promise<any> {
+  return baseRequest(LIVE_URL, '/status.txt');
 }
