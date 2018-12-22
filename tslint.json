@@ -1,8 +1,6 @@
 {
   "defaultSeverity": "error",
-  "extends": [
-    "tslint:recommended"
-  ],
+  "extends": "./node_modules/tslint/lib/configs/recommended",
   "jsRules": {},
   "rules": {
     "arrow-parens": false,

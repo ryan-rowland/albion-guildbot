@@ -27,6 +27,7 @@ module.exports = {
   },
   kill: {
     // Min killfame to report kill
-    minFame: 25000
+    minFame: 25000,
+    victimMinFame: 10000
   }
 };
