@@ -17,17 +17,57 @@ const adapter = new FileSync('.db.json');
 const db = low(adapter);
 db.defaults({ recents: { battleId: 0, eventId: 0 } }).write();
 
-// Heroku will crash if we're not listenining on env.PORT.
-if (process.env.HEROKU) {
-  const Express = require('express');
-  const app = new Express();
-  app.listen(process.env.PORT || 1337);
-}
-
 // Configure logger settings
 logger.remove(logger.transports.Console);
 logger.add(logger.transports.Console, { colorize: true });
 logger.level = 'debug';
+
+var http = require('http'); // importing http
+
+logger.debug(config);
+
+function startKeepAlive() {
+  // from https://stackoverflow.com/questions/5480337/easy-way-to-prevent-heroku-idling
+  setInterval(function() {
+    var options = {
+      host: process.env.PING_URL,
+      port: 80,
+      path: '/'
+    };
+    http.get(options, function(res) {
+      res.on('data', function(chunk) {
+        try {
+          // optional logging... disable after it's working
+          logger.info('HEROKU RESPONSE: ' + chunk);
+        } catch (err) {
+          logger.error(err.message);
+        }
+      });
+    }).on('error', function(err) {
+      logger.error('Error: ' + err.message);
+    });
+  }, 10 * 60 * 1000); // load every 10 minutes
+}
+
+// Heroku will crash if we're not listenining on env.PORT.
+if (process.env.HEROKU) {
+  const Express = require('express');
+  const app = new Express();
+  app.listen(process.env.PORT || 1337, (err) => {
+    if (err) {
+      return logger.error('something bad happened: ' + err);
+    }
+
+    logger.info('server is listening on ' + process.env.PORT || 1337);
+    return true;
+  });
+  app.get('/', (request, response) => {
+    response.send('WOOP WOOP');
+  });
+  if (process.env.PING_URL) {
+    startKeepAlive();
+  }
+}
 
 // Read eventID file to get a list of all posted events
 // If this fails, we cannot continue, so throw an exception.
@@ -201,7 +241,7 @@ function checkKillboard() {
         const isFriendlyKill = config.guild.guilds.indexOf(event.Killer.GuildName) !== -1;
         const isFriendlyDeath = config.guild.guilds.indexOf(event.Victim.GuildName) !== -1;
 
-        if (!(isFriendlyKill || isFriendlyDeath) || event.TotalVictimKillFame < 10000) {
+        if (!(isFriendlyKill || isFriendlyDeath) || event.TotalVictimKillFame < config.victimMinFame) {
           return;
         }
 
