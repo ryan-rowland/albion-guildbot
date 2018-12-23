@@ -1,5 +1,5 @@
 # Albion Guildbot
-A Bot that posts interesting events about a guild to Discord. Based on https://github.com/ryan-rowland/albion-guildbot. Added heroku keepalive pings.
+A Bot that posts interesting events about a guild to Discord. Added heroku keepalive pings.
 
 ### Individual Kill
 ![](https://i.gyazo.com/fc9106ae9f0916a24435849fe8856f7d.png)
@@ -36,7 +36,7 @@ set as a comma-separated string. For example, `ALBION_GUILDS="TeamCasualty,Team 
 
 #### 3a. Environment example: Heroku
 Using heroku, you should already have a Heroku project set up. You should have your heroku repository
-set as a git source (eg `git remote add heroku https://github.com/forsi165/killbot`).
+set as a git source (eg `git remote add heroku https://github.com/ryan-rowland/albion-guildbot` or setup via the heroku project under "Deploy").
 
 After setting your environment variables in the Heroku dashboard or via the
 Heroku CLI, the project can be pushed to heroku via git, eg `git push heroku master`.
@@ -44,7 +44,7 @@ Heroku CLI, the project can be pushed to heroku via git, eg `git push heroku mas
 If using heroku, make sure to also set the environment variable HEROKU to true. If you
 don't, heroku will shut down after not being bound to a port for 60 seconds.
 
-If PING_URL is set to the heroku app url, every 10 minutes the app is pinged to prevent Heroku idling. To get enough hours for a complete month, credit card details have to be provided to heroku. No paid plan is needed, but adding credit card details gives you extra running hours, enough to run a single server 24/7.
+If PING_URL is set to the heroku app url (eg yourappname.herokuapp.com), every 10 minutes the app is pinged to prevent Heroku idling. To get enough hours for a complete month, credit card details have to be provided to heroku. No paid plan is needed, but adding credit card details gives you extra running hours, enough to run a single server 24/7.
 
 #### 3b. Running locally
 To run locally, first you'll need to install the dependencies via npm
