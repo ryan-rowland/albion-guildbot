@@ -46,7 +46,7 @@ function startKeepAlive() {
     }).on('error', function(err) {
       logger.error('Error: ' + err.message);
     });
-  }, 10 * 60 * 1000); // load every 20 minutes
+  }, 10 * 60 * 1000); // load every 10 minutes
 }
 
 // Heroku will crash if we're not listenining on env.PORT.
